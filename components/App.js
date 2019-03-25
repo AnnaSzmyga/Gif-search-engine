@@ -6,7 +6,8 @@ App = React.createClass({
         return {
             loading: false,
             searchingText: '',
-            gif: {}
+            gif: {},
+            errorText: ''
         };
     },
     handleSearch: function(searchingText) {
@@ -26,6 +27,13 @@ App = React.createClass({
                     searchingText: searchingText
                 });
             })
+            .catch(error => {
+                console.error(error);
+                this.setState({
+                    loading: false,
+                    errorText: 'ERROR - something went wrong!'
+                });
+            });
     },
     getGif: function(searchingText) {
         return new Promise(
@@ -37,7 +45,12 @@ App = React.createClass({
                     if (xhr.status === 200) {
                         var response = JSON.parse(xhr.responseText);
                         resolve(response);
+                    } else {
+                        reject(new Error(this.statusText));
                     }
+                }
+                xhr.onerror = function() {
+                    reject(new Error(`XMLHttpRequest Error: ${this.statusText}`));
                 }
                 xhr.send();
             });
@@ -53,6 +66,7 @@ App = React.createClass({
                 <h1>Wyszukiwarka GIFow!</h1>
                 <p>Znajdź gifa na <a href='http://giphy.com'>giphy</a>. Naciskaj enter, aby pobrać kolejne gify.</p>
                 <Search onSearch={this.handleSearch}/>
+                <p>{this.state.errorText}</p>
                 <Gif
                     loading={this.state.loading}
                     url={this.state.gif.url}
